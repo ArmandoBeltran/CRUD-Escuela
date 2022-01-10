@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horario</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script src="https://kit.fontawesome.com/baaa30bed8.js" crossorigin="anonymous"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300&family=Zen+Kurenaido&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="./css/main.css">
+</head>
+<body>
+    <header class="container-fluid text-center">
+        <h1><a href="../index.html" class="title">Sistema de Gestión Universitario</a></h1>
+        <ul>
+            <li><a href="alumno.html">Alumnos</a></li>
+            <li><a href="profesor.html">Profesores</a></li>
+            <li><a href="materia.html">Materias</a></li>
+            <li><a href="horario.html" class="active">Horarios</a></li>
+        </ul>
+    </header>
+
+    <section id="app" class="container-fluid">
+        <section class="row mt-3">
+            <section class="col-lg-6">
+                <h3 class="text-success">Horarios registrados</h3>
+            </section>
+            <section class="col-lg-6">
+                <button class="btn btn-success float-right" data-toggle="modal" data-target="#modal" @click="getAllStudents(); getAllProfessors(); getAllSubjects();">
+                    <i class="fas fa-user"></i>&nbsp;&nbsp;Agregar Horario
+                </button>
+            </section>
+        </section>
+
+        <table class="table table-striped">
+            <thead>
+                <tr class="text-center bg-success text-light">
+                    <th>ID</th>
+                    <th>Alumno</th>
+                    <th>Profesor</th>
+                    <th>Materia</th>
+                    <th>Hora de clase</th>
+                    <th>Día</th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr class="text-center" v-for="schedule in schedules">
+                    <td>{{schedule.id_schedule}}</td>
+                    <td>{{schedule.student_id}}</td>
+                    <td>{{schedule.professor_id}}</td>
+                    <td>{{schedule.subject_id}}</td>
+                    <td>{{schedule.time}}</td>
+                    <td>{{schedule.classDay}}</td>
+                    <td>
+                        <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#editModal" @click="selectSchedule(schedule); getAllStudents(); getAllProfessors(); getAllSubjects();">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                    </td>
+                    <td>
+                        <a href="#" class="btn btn-danger" data-toggle="modal" data-target="#deleteModal" @click="selectSchedule(schedule)">
+                            <i class="fas fa-trash-alt"></i>
+                        </a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+<!-- Recursos -->
+
+        <section class="alert alert-danger" v-if="errorMsg">
+            {{errorMsg}}
+        </section>
+        <section class="alert alert-success" v-if="successMsg">
+            {{successMsg}}
+        </section>
+
+        <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabel">Agregar Horario</h5>
+                  <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <section class="modal-body">
+                    <form action="" method="post" type="multipart/form-data">
+                        <div class="modal-body">
+                          <div class="form-group">
+                            <select name="students" id="students" class="form-control input-sm" v-model="newSchedule.student">
+                                <option disabled selected>Estudiantes</option>
+                                <option v-for="student in students" :value="student.id_student">{{student.name}}</option>
+                            </select>
+                          </div>
+                          <div class="form-group">
+                            <select name="professors" id="professors" class="form-control input-sm" v-model="newSchedule.professor">
+                                <option disabled>Profesores</option>
+                                <option v-for="professor in professors" :value="professor.id_professor">{{professor.name}}</option>
+                            </select>
+                          </div>
+                          <div class="form-group">
+                            <select name="subjects" id="subjects" class="form-control input-sm" v-model="newSchedule.subject">
+                                <option disabled>Materias</option>
+                                <option v-for="subject in subjects" :value="subject.id_subject">{{subject.name}}</option>
+                            </select>
+                          </div>
+                          <div class="form-group">
+                            <input type="time" name="class-time" id="class-time" class="form-control input-sm" placeholder="Ingrese la hora de clase" v-model="newSchedule.time">
+                          </div>
+                          <div class="form-group">
+                            <select name="days" id="days" class="form-control input-sm" v-model="newSchedule.day">
+                                <option value="Lunes">Lunes</option>
+                                <option value="Martes">Martes</option>
+                                <option value="Miercoles">Miércoles</option>
+                                <option value="Jueves">Jueves</option>
+                                <option value="Viernes">Viernes</option>
+                            </select>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-danger" data-dismiss="modal">Cancelar</button>
+                            <button class="btn btn-success" @click="addSchedule()">Guardar Horario</button>
+                          </div>
+                        </div>
+                    </form>
+                </section>
+              </div>
+            </div>
+          </div>
+
+<!--Edit Modal-->
+            <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Editar Horario</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    </div>
+                    <section class="modal-body">
+                        <form action="" method="post" type="multipart/form-data">
+                            <div class="modal-body">
+                            <div class="form-group">
+                                <select name="students" id="students" class="form-control input-sm" v-model="currentSchedule.student_id">
+                                    <option disabled selected>Estudiantes</option>
+                                    <option v-for="student in students" :value="student.id_student">{{student.name}}</option>
+                                </select>
+                                {{currentSchedule.student}}
+                            </div>
+                            <div class="form-group">
+                                <select name="professors" id="professors" class="form-control input-sm" v-model="currentSchedule.professor_id">
+                                    <option disabled>Profesores</option>
+                                    <option v-for="professor in professors" :value="professor.id_professor">{{professor.name}}</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <select name="subjects" id="subjects" class="form-control input-sm" v-model="currentSchedule.subject_id">
+                                    <option disabled>Materias</option>
+                                    <option v-for="subject in subjects" :value="subject.id_subject">{{subject.name}}</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <input type="time" name="class-time" id="class-time" class="form-control input-sm" placeholder="Ingrese la hora de clase" v-model="currentSchedule.time">
+                            </div>
+                            <div class="form-group">
+                                <select name="days" id="days" class="form-control input-sm" v-model="currentSchedule.classDay">
+                                    <option value="Lunes">Lunes</option>
+                                    <option value="Martes">Martes</option>
+                                    <option value="Miercoles">Miércoles</option>
+                                    <option value="Jueves">Jueves</option>
+                                    <option value="Viernes">Viernes</option>
+                                </select>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-danger" data-dismiss="modal">Cancelar</button>
+                                <button class="btn btn-success" @click="updateSchedule()">Actualizar</button>
+                            </div>
+                            </div>
+                        </form>
+                    </section>
+                </div>
+                </div>
+            </div>
+
+ <!--Modal para eliminar-->
+          <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabel">¿Seguro que desea eliminar este registro?</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-primary" data-dismiss="modal">Cancelar</button>
+                  <a href="" class="btn btn-danger text-center" @click="deleteSchedule();">Eliminar</a>
+                </div>
+              </div>
+            </div>
+          </div>
+    </section>
+    </section>
+
+    
+
+    <footer>
+        <section class="info">
+            <section class="datos">
+                <h6>Luis Armando Beltrán Martínez</h6>
+                <h6>beltran.armando2210@gmail.com</h6>
+                <h6>EVN401</h6>
+            </section>
+            <figure class="iconos">
+                <a href="https://twitter.com/armanxddo" target="_blank"><i class="fab fa-twitter-square"></i></a>
+                <a href="https://www.instagram.com/armanxddo.mf/?hl=es" target="_blank"><i class="fab fa-instagram-square"></i></a>
+                <a href="https://www.youtube.com/channel/UCc3S5wgp4aQM50skPEcYQ2w" target="_blank"><i class="fab fa-youtube"></i></a>
+                <a href="https://github.com/ArmandoBeltran"><i class="fab fa-github"></i></a>
+            </figure>
+        </section>
+   </footer>
+
+   <script src="../js/mainSchedules.js"></script>
+</body>
+</html>

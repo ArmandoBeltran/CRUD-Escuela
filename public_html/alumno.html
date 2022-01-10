@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alumno</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script src="https://kit.fontawesome.com/baaa30bed8.js" crossorigin="anonymous"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300&family=Zen+Kurenaido&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="./css/main.css">
+</head>
+<body>
+    <header class="container-fluid text-center">
+        <h1><a href="../index.html" class="title">Sistema de Gestión Universitario</a></h1>
+        <ul>
+            <li><a href="alumno.html" class="active">Alumnos</a></li>
+            <li><a href="profesor.html">Profesores</a></li>
+            <li><a href="materia.html">Materias</a></li>
+            <li><a href="horario.html">Horarios</a></li>
+        </ul>
+    </header>
+
+    <section id="app" class="container-fluid">
+        <section class="row mt-3">
+            <section class="col-lg-6">
+                <h3 class="text-success">Alumnos registrados</h3>
+            </section>
+            <section class="col-lg-6">
+                <button class="btn btn-success float-right" data-toggle="modal" data-target="#modal">
+                    <i class="fas fa-user"></i>&nbsp;&nbsp;Agregar Usuario
+                </button>
+            </section>
+        </section>
+
+        <table class="table table-striped">
+            <thead>
+                <tr class="text-center bg-success text-light">
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Carrera</th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr class="text-center" v-for="student in students">
+                    <td>{{ student.id_student }}</td>
+                    <td>{{ student.name }}</td>
+                    <td>{{ student.major }}</td>
+                    <td>
+                        <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#editModal" @click="selectStudent(student)">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                    </td>
+                    <td>
+                        <a href="#" class="btn btn-danger" data-toggle="modal" data-target="#deleteModal" @click="selectStudent(student)">
+                            <i class="fas fa-trash-alt"></i>
+                        </a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+<!-- Recursos -->
+
+        <section class="alert alert-danger" v-if="errorMsg">
+            {{errorMsg}}
+        </section>
+        <section class="alert alert-success" v-if="successMsg">
+            {{successMsg}}
+        </section>
+
+<!--Modal de agregar-->
+        <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabel">Agregar alumno</h5>
+                  <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <section class="modal-body">
+                    <form action="" method="post" type="multipart/form-data">
+                        <div class="modal-body">
+                          <div class="form-group">
+                            <input type="text" name="name" class="form-control input-sm" placeholder="Nombre" v-model="newStudent.name">
+                          </div>
+                          <div class="form-group">
+                            <input type="text" name="major" class="form-control input-sm" placeholder="Carrera" v-model="newStudent.major">
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-danger" data-dismiss="modal">Cancelar</button>
+                            <button class="btn btn-success" @click="addStudent();">Guardar</button>
+                          </div>
+                        </div>
+                    </form>
+                </section>
+              </div>
+            </div>
+          </div>
+
+<!--Modal de editar-->
+          <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabel">Agregar alumno</h5>
+                  <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <section class="modal-body">
+                    <form action="" method="post" type="multipart/form-data">
+                        <div class="modal-body">
+                          <div class="form-group">
+                            <input type="text" name="name" class="form-control input-sm" placeholder="Nombre" v-model="currentStudent.name">
+                          </div>
+                          <div class="form-group">
+                            <input type="text" name="major" class="form-control input-sm" placeholder="Carrera" v-model="currentStudent.major">
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-danger" data-dismiss="modal">Cancelar</button>
+                            <button class="btn btn-success" @click="updateStudent();">Actualizar</button>
+                          </div>
+                        </div>
+                    </form>
+                </section>
+              </div>
+            </div>
+          </div>
+
+<!--Modal para eliminar-->
+          <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabel">¿Seguro que desea eliminar este registro?</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-primary" data-dismiss="modal">Cancelar</button>
+                  <a href="" class="btn btn-danger text-center" @click="deleteStudent();">Eliminar</a>
+                </div>
+              </div>
+            </div>
+          </div>
+    </section>
+
+    
+
+    <footer>
+        <section class="info">
+            <section class="datos">
+                <h6>Luis Armando Beltrán Martínez</h6>
+                <h6>beltran.armando2210@gmail.com</h6>
+                <h6>EVN401</h6>
+            </section>
+            <figure class="iconos">
+                <a href="https://twitter.com/armanxddo" target="_blank"><i class="fab fa-twitter-square"></i></a>
+                <a href="https://www.instagram.com/armanxddo.mf/?hl=es" target="_blank"><i class="fab fa-instagram-square"></i></a>
+                <a href="https://www.youtube.com/channel/UCc3S5wgp4aQM50skPEcYQ2w" target="_blank"><i class="fab fa-youtube"></i></a>
+                <a href="https://github.com/ArmandoBeltran"><i class="fab fa-github"></i></a>
+            </figure>
+        </section>
+   </footer>
+
+   <script src="../js/mainStudents.js"></script>
+</body>
+</html>
